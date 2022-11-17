@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Authenticators;
 using System.Text.Json;
+using System.Text.Json.Serialization; 
 using System.Threading.Tasks;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
@@ -12,6 +13,7 @@ using System.Diagnostics;
 using Atlassian.Jira;
 using System.Security.Cryptography;
 using System.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 
 namespace TesteKodeApp
 {
@@ -24,17 +26,17 @@ namespace TesteKodeApp
         //}
         public static async Task Main(string[] args)
         {
-            //await BasicAuthK();
+            await BasicAuthK();
             //Testekode test = new Testekode();
             //string testest = test.REDM_JSON_request();
             //Console.WriteLine(JsonConvert.DeserializeObject(testest));
-            await REDM_API_Request();
-
+            //await REDM_API_Request();
+            await RTCAS_API_Request();
         }
 
         public static async Task BasicAuthK()
         {
-            string url = "https://jira.nov.com/rest/servicedeskapi/servicedesk/4822/requesttype/14610/field"; //Går mot CET infra (162), men ikke REDM (4882)? //https://jira.nov.com/rest/servicedeskapi/servicedesk/162/
+            string url = "https://support.nov.com/rest/servicedeskapi/servicedesk/11/requesttype/312/field"; //JIRA REDM = "https://jira.nov.com/rest/servicedeskapi/servicedesk/4822/requesttype/14610/field"; 
             var client = new RestClient(url);
             var request = new RestRequest();
             request.AddHeader("Accept", "application/json");
@@ -42,13 +44,12 @@ namespace TesteKodeApp
             client.Authenticator = new HttpBasicAuthenticator("risinggaardsortla", "91323212Zenith");
             var restResponse = await client.ExecuteAsync(request);
 
-
-            if (restResponse.IsSuccessful)
-            {
+            //if (restResponse.IsSuccessful)
+            //{
                 Console.WriteLine(restResponse.StatusCode);
                 //Console.WriteLine(restResponse.Content);
                 Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
-            }
+            //}
         }
 
         public static async Task REDM_API_Request()
@@ -56,24 +57,45 @@ namespace TesteKodeApp
             Testekode redmReq = new Testekode();
             string jsonredm = redmReq.REDM_JSON_request();
 
+           
             string url = "https://jira.nov.com/rest/servicedeskapi/request";
             var client = new RestClient(url);
             var request = new RestRequest();
-            //request.Method = Method.Post;
-            //request.AddHeader("accept", "application/json");
-            request.AddJsonBody(jsonredm);
+            //request.AddHeader("Content-type", "application/json");
+            request.AddStringBody(jsonredm, DataFormat.Json);
+            //request.AddJsonBody(jsonredm);
 
             client.Authenticator = new HttpBasicAuthenticator("risinggaardsortla", "91323212Zenith");
-            var restResponse = await client.ExecuteAsync(request);
+            var restResponse = await client.ExecutePostAsync(request);
 
             //if (restResponse.IsSuccessful)
             //{
-            Console.WriteLine(restResponse.Content);  ///HVA BLIR FAKTISK SENDT.
+            //Console.WriteLine(restResponse.Content);  ///HVA BLIR FAKTISK SENDT.
             //Console.WriteLine(restResponse.StatusCode);
-            //Console.WriteLine(restResponse.ErrorMessage);
             //Console.WriteLine(restResponse.ErrorException);
-            //Console.WriteLine(restResponse.Content);
-            //Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
+            //Console.WriteLine(request.ToString());
+            Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
+            //}
+
+        }
+
+        public static async Task RTCAS_API_Request()
+        {
+
+
+            string url = "https://jira.nov.com/rest/servicedeskapi/request";
+            var client = new RestClient(url);
+            var request = new RestRequest();
+
+            client.Authenticator = new HttpBasicAuthenticator("risinggaardsortla", "91323212Zenith");
+            var restResponse = await client.ExecutePostAsync(request);
+
+            //if (restResponse.IsSuccessful)
+            //{
+            //Console.WriteLine(restResponse.Content);  ///HVA BLIR FAKTISK SENDT.
+            //Console.WriteLine(restResponse.StatusCode);
+            //Console.WriteLine(restResponse.ErrorException);
+            Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
             //}
 
         }
@@ -84,20 +106,19 @@ namespace TesteKodeApp
             REDM redm = new REDM()
             {
                 summary = "12345678-001",
-                customfield_16671 = "45893",
-                customfield_16665 = " 40143",
+                customfield_16671 = "[{\"value\": \"45893\"}]", //Legge til hele arrayet som en validValue? PÅ alle punktene? Prøve å lage en god gammaldags string for dette tror jeg.
+                customfield_16665 = "[{\"value\": \"40143\"}]",
                 customfield_10040 = "10122",
                 customfield_13564 = "44068",
-                customfield_12699 = "44010",
+                customfield_12699 = "[44010]",
                 customfield_14114 = "16524",
                 customfield_15509 = "24911",
                 customfield_14471 = "18285",
                 description = "Dette er en test av CADJIRA",
                 customfield_14361 = "17343",
                 customfield_10361 = "44501",
-                customfield_14385 = "17509",
+                customfield_14385 = "[{\"value\": \"1750\"}]",
                 customfield_13664 = 1,
-                
             };
 
             string stringredm = JsonConvert.SerializeObject(redm);
@@ -105,6 +126,7 @@ namespace TesteKodeApp
             return fullJsonreq;
         }
     }
+
 
     class REDM
     {
