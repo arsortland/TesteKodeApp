@@ -19,24 +19,21 @@ namespace TesteKodeApp
 {
     class Testekode
     {
-        //static async Task Main(string[] args)
-        //{
-        //    var tasks = new List<Task> { TestTask() };
-        //    await Task.WhenAll(tasks);
-        //}
         public static async Task Main(string[] args)
         {
             await BasicAuthK();
+            //ObjectRigEDM();
+
             //Testekode test = new Testekode();
             //string testest = test.REDM_JSON_request();
             //Console.WriteLine(JsonConvert.DeserializeObject(testest));
             //await REDM_API_Request();
-            await RTCAS_API_Request();
+            //await RTCAS_API_Request();
+            await API_Request("redm");
         }
-
         public static async Task BasicAuthK()
         {
-            string url = "https://support.nov.com/rest/servicedeskapi/servicedesk/11/requesttype/312/field"; //JIRA REDM = "https://jira.nov.com/rest/servicedeskapi/servicedesk/4822/requesttype/14610/field"; 
+            string url = "https://jira.nov.com/rest/servicedeskapi/servicedesk/4822/requesttype/14610/field"; //GCSET"https://support.nov.com/rest/servicedeskapi/servicedesk/11/requesttype/1112/field"; //JIRA REDM = "https://jira.nov.com/rest/servicedeskapi/servicedesk/4822/requesttype/14610/field"; 
             var client = new RestClient(url);
             var request = new RestRequest();
             request.AddHeader("Accept", "application/json");
@@ -51,21 +48,42 @@ namespace TesteKodeApp
                 Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
             //}
         }
+        public static async Task API_Request(string choice_made)
+        {
+            string url = "";
+            string json = "";
+            if (choice_made == "redm")
+            {
+                url = "https://jira.nov.com/rest/servicedeskapi/request";
+                json = ObjectRigEDM();
+            }
+            if (choice_made == "gcs")
+            {
+                url = "https://support.nov.com/rest/servicedeskapi/request";
+                json = "";
+            }
+            var client = new RestClient(url);
+            var request = new RestRequest();
+            request.AddStringBody(json, DataFormat.Json);
+
+            client.Authenticator = new HttpBasicAuthenticator("risinggaardsortla", "91323212Zenith");
+
+            var restResponse = await client.ExecutePostAsync(request);
+
+            Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content)); //DENNE MÅ VEKK PÅ ET TIDSPUNKT -  FINNE URL FRA DENNE.
+        }
 
         public static async Task REDM_API_Request()
         {
-            Testekode redmReq = new Testekode();
-            string jsonredm = redmReq.REDM_JSON_request();
+            Console.WriteLine(ObjectRigEDM());
 
-           
             string url = "https://jira.nov.com/rest/servicedeskapi/request";
             var client = new RestClient(url);
             var request = new RestRequest();
-            //request.AddHeader("Content-type", "application/json");
-            request.AddStringBody(jsonredm, DataFormat.Json);
-            //request.AddJsonBody(jsonredm);
+            request.AddStringBody(ObjectRigEDM(), DataFormat.Json);
 
             client.Authenticator = new HttpBasicAuthenticator("risinggaardsortla", "91323212Zenith");
+
             var restResponse = await client.ExecutePostAsync(request);
 
             //if (restResponse.IsSuccessful)
@@ -73,22 +91,25 @@ namespace TesteKodeApp
             //Console.WriteLine(restResponse.Content);  ///HVA BLIR FAKTISK SENDT.
             //Console.WriteLine(restResponse.StatusCode);
             //Console.WriteLine(restResponse.ErrorException);
-            //Console.WriteLine(request.ToString());
             Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
             //}
-
         }
 
+        //BARE HA EN "API_REQUEST" OG ENDRE -JSON- og -URL- VARIABELEN AVHENGIG AV REDM OG/ELLER GCSET.
         public static async Task RTCAS_API_Request()
         {
+            string json = "{ \"serviceDeskId\": \"11\",\"requestTypeId\": \"1112\", \"requestFieldValues\": { \"customfield_11869\": {\"value\": \"Other\"}, \"description\": \"Greetings from CADJIRA API TEST\"  } }";
+            Console.WriteLine(json);
 
-
-            string url = "https://jira.nov.com/rest/servicedeskapi/request";
+            string url = "https://support.nov.com/rest/servicedeskapi/request";
             var client = new RestClient(url);
             var request = new RestRequest();
+            request.AddStringBody(json, DataFormat.Json);
 
             client.Authenticator = new HttpBasicAuthenticator("risinggaardsortla", "91323212Zenith");
+
             var restResponse = await client.ExecutePostAsync(request);
+
 
             //if (restResponse.IsSuccessful)
             //{
@@ -99,64 +120,50 @@ namespace TesteKodeApp
             //}
 
         }
-
-        public string REDM_JSON_request()
+        public static string ObjectRigEDM()
         {
-
-            REDM redm = new REDM()
-            {
-                summary = "12345678-001",
-                customfield_16671 = "[{\"value\": \"45893\"}]", //Legge til hele arrayet som en validValue? PÅ alle punktene? Prøve å lage en god gammaldags string for dette tror jeg.
-                customfield_16665 = "[{\"value\": \"40143\"}]",
-                customfield_10040 = "10122",
-                customfield_13564 = "44068",
-                customfield_12699 = "[44010]",
-                customfield_14114 = "16524",
-                customfield_15509 = "24911",
-                customfield_14471 = "18285",
-                description = "Dette er en test av CADJIRA",
-                customfield_14361 = "17343",
-                customfield_10361 = "44501",
-                customfield_14385 = "[{\"value\": \"1750\"}]",
-                customfield_13664 = 1,
-            };
-
-            string stringredm = JsonConvert.SerializeObject(redm);
-            string fullJsonreq = $"{{\"serviceDeskId\":\"4822\",\"requestTypeId\":\"14610\",\"requestFieldValues\":{stringredm}}}";
-            return fullJsonreq;
+            string jsonstring = "{" +
+                "\"serviceDeskId\": \"4822\"," +
+                "\"requestTypeId\": \"14610\"," +
+                "\"requestFieldValues\": {" +
+                "\"summary\": \"12345678-001\"," +
+                "\"customfield_16671\": {\"value\": \"No Business Disruption - Workaround Available\"}," +
+                "\"customfield_16665\": {\"value\": \"Impacts Me or a Single Person\"}," +
+                "\"customfield_10040\": {\"value\": \"Norway\"}," +
+                "\"customfield_13564\": [{\"value\": \"Other\"}]," +
+                "\"customfield_12699\": {\"value\": \"Rig Systems\"}," +
+                "\"customfield_14114\": {\"value\": \"Norway\"}," +
+                "\"customfield_15509\": {\"value\": \"No, update does not need Global ID\"}," +
+                "\"customfield_14471\": {\"value\": \"Purchased\"}," +
+                "\"description\": \"This is a General description sent through JIRA API, Please Ignore this ticket.\"," +
+                "\"customfield_14361\": {\"value\": \"No, Do Not Enable\"}," +
+                "\"customfield_13664\": 1" +
+                "}" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                //"" +
+                "}";
+            //Console.WriteLine(jsonstring);
+            return jsonstring;
         }
     }
 
 
-    class REDM
-    {
-
-        public string summary { get; set; } //PN
-        public string customfield_16671 { get; set; } //Urgency
-        public string customfield_16665 { get; set; } //Impact
-
-        public string customfield_10040 { get; set; } //NOV Facility
-        public string customfield_13564 { get; set; } //Type of Change
-        public string customfield_12699 { get; set; } //Business segment
-        public string customfield_14114 { get; set; } // NOV mfg location
-        public string customfield_15509 { get; set; } //Requires Global ID
-        public string customfield_14471 { get; set; } //Item Type
-        public string description { get; set; } //Description
-        public string customfield_14361 { get; set; } //Enable part in inventory Org
-        public string customfield_10361 { get; set; } //Oracle Inventory
-        //Skipping CAD DAtaset
-        public string customfield_14385 { get; set; } //Part of workflow?
-        //Skipping productline
-        //Skipping replication
-        //Skipping ERP
-        //Skipping documentatiion
-        public int customfield_13664 { get; set; } //Number of line items.
-        //Skipping include ppl in ticket.
-
-        //CANRAISEBEHALFOF?? USE THAT AS AUTH?
-
-    }
 }
+
 
 //API TOKEN2: Dh5GTGZ56tN15TESboIY9897
 
