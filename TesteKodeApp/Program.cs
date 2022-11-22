@@ -1,19 +1,7 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Authenticators;
-using System.Text.Json;
-using System.Text.Json.Serialization; 
-using System.Threading.Tasks;
-using System.DirectoryServices;
-using System.DirectoryServices.AccountManagement;
-using System.Collections;
-using System.Xml.Linq;
-using System.Diagnostics;
-using Atlassian.Jira;
-using System.Security.Cryptography;
-using System.Net.Http.Headers;
-using Newtonsoft.Json.Linq;
+
 
 namespace TesteKodeApp
 {
@@ -21,7 +9,7 @@ namespace TesteKodeApp
     {
         public static async Task Main(string[] args)
         {
-            await BasicAuthK();
+            //await BasicAuthK();
             //ObjectRigEDM();
 
             //Testekode test = new Testekode();
@@ -29,7 +17,8 @@ namespace TesteKodeApp
             //Console.WriteLine(JsonConvert.DeserializeObject(testest));
             //await REDM_API_Request();
             //await RTCAS_API_Request();
-            await API_Request("redm");
+            await NewTwoMain();
+            //await API_Request("redm");
         }
         public static async Task BasicAuthK()
         {
@@ -43,9 +32,9 @@ namespace TesteKodeApp
 
             //if (restResponse.IsSuccessful)
             //{
-                Console.WriteLine(restResponse.StatusCode);
-                //Console.WriteLine(restResponse.Content);
-                Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
+            Console.WriteLine(restResponse.StatusCode);
+            //Console.WriteLine(restResponse.Content);
+            Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
             //}
         }
         public static async Task API_Request(string choice_made)
@@ -94,6 +83,7 @@ namespace TesteKodeApp
             Console.WriteLine(JsonConvert.DeserializeObject(restResponse.Content));
             //}
         }
+
 
         //BARE HA EN "API_REQUEST" OG ENDRE -JSON- og -URL- VARIABELEN AVHENGIG AV REDM OG/ELLER GCSET.
         public static async Task RTCAS_API_Request()
@@ -159,9 +149,31 @@ namespace TesteKodeApp
             //Console.WriteLine(jsonstring);
             return jsonstring;
         }
+
+        private static HttpClient sharedClient = new()
+        {
+            BaseAddress = new Uri("https://jsonplaceholder.typicode.com"),
+        };
+
+        static readonly HttpClient client = new HttpClient();
+
+        static async Task NewTwoMain()
+        {
+            try
+            {
+                using HttpResponseMessage response = await client.GetAsync("https://jsonplaceholder.typicode.com/todos/1");
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine(responseBody);
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
     }
-
-
 }
 
 
